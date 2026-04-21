@@ -1,0 +1,1902 @@
+{
+  "name": "prestashop-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/commande",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        480
+      ],
+      "id": "975a7191-38c5-4642-9d44-0e8e36843da9",
+      "name": "Webhook",
+      "webhookId": "e030bd50-393b-4379-9868-a72b00d9cce6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.current_message }}",
+        "options": {
+          "systemMessage": "Tu es un assistant e-commerce expert et ultra-intelligent pour PassionCampagne.\nTon rôle est d'accompagner le client avec empathie tout en étant d'une précision\ntechnique absolue pour préparer les commandes PrestaShop.\n\n### RÈGLES DE RÉFLEXION (CHAIN OF THOUGHT)\n\n1. **Analyse de l'Intention** : Identifie si le client veut chercher un produit,\n   poser une question ou passer commande.\n\n2. **Vérification du Stock** : Avant de proposer un produit, consulte TOUJOURS\n   l'outil `get_produits` et vérifie la quantité disponible (champ \"quantity\").\n   Si quantity = 0, dis que le produit est indisponible.\n   Affiche toujours la photo : ![Nom du produit](URL_IMAGE)\n   URL_IMAGE = https://9DZICA5S66TNKDE1XLFJ3LGYU4P8BKX1@www.passioncampagne9.projets-omega.net/api/images/products/{id}/{id_default_image}\n   Affiche le prix TTC en dessous de la photo.\n\n3. **Précision de l'Extraction** : Extrais le maximum d'infos en une seule fois.\n   - Numéros malgaches acceptés : 032, 033, 034, 038, +261...\n   - Codes postaux acceptés : 3 à 10 chiffres\n   - Si une info manque, demande-la poliment dans \"reply\"\n\n4. **Logistique 100% DYNAMIQUE** :\n   - Appelle `get_carriers` → récupère les transporteurs RÉELS depuis PrestaShop\n   - Appelle `GET mode de paiement` → récupère les paiements RÉELS depuis PrestaShop\n   - Utilise l'ID exact retourné par get_carriers pour id_carrier\n   - Utilise le module exact retourné pour payment_module\n   - JAMAIS inventer ou hardcoder des options\n   - JAMAIS utiliser un carrier ou paiement absent des résultats API\n\n5. **Confirmation** : Affiche le récapitulatif complet et attends OUI ou NON.\n   Ne jamais finaliser sans OUI explicite du client.\n\n### ÉTAPES DANS L'ORDRE\n\nÉtape 1 — Produit : appelle get_produits, propose le produit avec photo + prix\nÉtape 2 — Infos client : demande prénom, nom, email, password, téléphone, adresse, CP, ville\nÉtape 3 — Livraison + Paiement : appelle get_carriers ET GET mode de paiement,\n           présente les options RÉELLES, attends le choix du client\nÉtape 4 — Récapitulatif : affiche tout et demande OUI ou NON\nÉtape 5 — JSON final : retourne le JSON complet uniquement après OUI\n\n### FORMAT DE PRÉSENTATION LIVRAISON + PAIEMENT\n\nUtilise EXACTEMENT ce format, avec les noms retournés par les outils :\n\n\"🚚 Modes de livraison disponibles :\n1. [name retourné par get_carriers - option 1]\n2. [name retourné par get_carriers - option 2]\n\n💳 Modes de paiement disponibles :\n1. [label retourné par GET mode de paiement - option 1]\n2. [label retourné par GET mode de paiement - option 2]\n3. [label retourné par GET mode de paiement - option 3]\n\nTapez le numéro ou le nom de votre choix.\"\n\n### SCHÉMA DE RETOUR (JSON UNIQUEMENT — aucun texte avant ou après)\n\n{\n  \"intent\": \"order_product | search_products | track_order | other\",\n  \"product\": \"nom du produit\",\n  \"quantity\": nombre,\n  \"user_info\": {\n    \"prenom\": \"\",\n    \"nom\": \"\",\n    \"email\": \"\",\n    \"password\": \"\",\n    \"adresse\": \"\",\n    \"code_postal\": \"\",\n    \"ville\": \"\",\n    \"telephone\": \"\",\n    \"mode_livraison\": \"\",\n    \"mode_paiement\": \"\"\n  },\n  \"id_carrier\": ID_NUMÉRIQUE_RETOURNÉ_PAR_API,\n  \"carrier_name\": \"Nom exact retourné par get_carriers\",\n  \"payment_module\": \"module_technique_retourné_par_API\",\n  \"payment_label\": \"Libellé exact retourné par GET mode de paiement\",\n  \"reply\": \"Réponse chaleureuse et précise au client\"\n}\n\n### MAPPING TECHNIQUE DE SECOURS\nUniquement si get_carriers ou GET mode de paiement échouent :\n\nLivraison (fallback) :\n- domicile / my carrier / livraison 1 → id_carrier: 2, carrier_name: \"Livraison à domicile\"\n- point relais / click and collect / livraison 2 → id_carrier: 1, carrier_name: \"Livraison en Point Relais\"\n\nPaiement (fallback) :\n- virement → payment_module: \"ps_wirepayment\", payment_label: \"Virement bancaire\"\n- chèque → payment_module: \"ps_checkpayment\", payment_label: \"Paiement par chèque\"\n- carte / CB → payment_module: \"ps_checkout\", payment_label: \"PrestaShop Checkout\"\n- livraison / cash → payment_module: \"ps_cashondelivery\", payment_label: \"Paiement à la livraison\"\n\n### RÈGLES ABSOLUES\n\n- Retourner UNIQUEMENT le JSON — aucun texte avant ou après\n- Ne jamais créer une commande sans OUI explicite du client\n- Si livraison ET paiement donnés dans le même message, extraire les deux\n- Le champ \"reply\" est la SEULE chose visible par le client\n- Accepter le français, le malgache et l'anglais basique\n- Si le client répond \"1\" ou \"2\", mapper vers l'option correspondante\n  de la liste présentée précédemment\n- Toujours appeler get_carriers ET GET mode de paiement avant l'étape 3,\n  même si le client semble déjà connaître les options"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        496
+      ],
+      "id": "cbff2820-be74-43d8-9826-94a169c51e69",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "725fc45e-b4c7-45b0-a8cf-81b771f3e416",
+              "leftValue": "={{ $json.has_product }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        496
+      ],
+      "id": "5505e067-3196-4f47-8ed1-2f3795addf77",
+      "name": "Vérifier Complétude"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prestashopResponse = $input.first().json;\nconst orderData = $('Vérifier Complétude').first().json;\n\n// Extraction sécurisée des infos produit\nlet product = null;\nif (prestashopResponse.products && prestashopResponse.products.length > 0) {\n  product = prestashopResponse.products[0];\n} else if (prestashopResponse.id) {\n  product = prestashopResponse;\n}\n\nif (!product) {\n  return [{\n    json: {\n      session_id:    orderData.session_id,\n      product_id:    null,\n      is_found:      false,\n      user_info:     orderData.user_info,\n      id_carrier:     orderData.id_carrier,\n      carrier_name:   orderData.carrier_name,\n      payment_module: orderData.payment_module,\n      payment_label:  orderData.payment_label\n    }\n  }];\n}\n\nconst productName = product.name[0]?.value || product.name || \"Produit\";\n// FIX: PrestaShop API often returns HT in 'price'. We prioritize price_ttc if it exists, \n// otherwise we apply 20% tax to 'price' for proper TTC calculation.\nconst priceHT    = parseFloat(product.price || 0);\nconst priceTTC   = parseFloat(product.price_ttc || (priceHT * 1.2).toFixed(2));\nconst quantity   = parseInt(orderData.quantity || 1);\nconst total      = (priceTTC * quantity).toFixed(2);\n\nreturn [{\n  json: {\n    session_id:        orderData.session_id,\n    product_id:        product.id,\n    product_name:      productName,\n    product_price:     priceHT,      // HT\n    product_price_ttc: priceTTC,     // TTC ✅\n    quantity:          quantity,\n    total:             total,        // TTC x quantité ✅\n    user_info:         orderData.user_info || {},\n    id_carrier:        orderData.id_carrier,\n    carrier_name:      orderData.carrier_name,\n    payment_module:    orderData.payment_module,\n    payment_label:     orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        496
+      ],
+      "id": "823b65c9-1b6d-4561-bcf0-0a4fda86ca8a",
+      "name": "Vérifier Produit Trouvé"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/customers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <customer>\n    <firstname>{{ $json.customer_firstname }}</firstname>\n    <lastname>{{ $json.customer_lastname }}</lastname>\n    <email>{{ $json.customer_email }}</email>\n    <passwd>{{ $json.customer_passwd }}</passwd>\n    <id_lang>1</id_lang>\n    <id_shop>1</id_shop>\n    <id_shop_group>1</id_shop_group>\n    <id_default_group>3</id_default_group>\n    <active>1</active>\n    <newsletter>0</newsletter>\n    <optin>0</optin>\n  </customer>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3520,
+        240
+      ],
+      "id": "0db90ef2-6c4e-456c-88b2-32794001ea15",
+      "name": "Create Customer",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Récupérer les infos utilisateur\nconst userInfo = data.user_info || {};\n\nlet firstname, lastname, email, passwd;\n\n// Si user_info contient des données, les utiliser\nif (userInfo.prenom && userInfo.nom && userInfo.email && userInfo.password) {\n  firstname = userInfo.prenom;\n  lastname = userInfo.nom;\n  email = userInfo.email;\n  passwd = userInfo.password;\n} else {\n  // Sinon, générer automatiquement\n  const prenoms = [\"Alex\", \"Marie\", \"Lucas\", \"Sophie\", \"Thomas\", \"Julie\", \"Pierre\", \"Emma\", \"Nicolas\", \"Lea\"];\n  const noms = [\"Martin\", \"Bernard\", \"Dubois\", \"Thomas\", \"Robert\", \"Petit\", \"Richard\", \"Durand\", \"Leroy\", \"Moreau\"];\n  \n  firstname = prenoms[Math.floor(Math.random() * prenoms.length)];\n  lastname = noms[Math.floor(Math.random() * noms.length)];\n  \n  const uniqueId = data.session_id.replace('sess_', '').substring(0, 8);\n  const timestamp = Date.now().toString().slice(-6);\n  \n  email = `chatbot.${uniqueId}@bot.local`;\n  passwd = `Pass${timestamp}!`;\n}\n\nreturn [{\n  json: {\n    ...data,\n    customer_firstname: firstname,\n    customer_lastname: lastname,\n    customer_email: email,\n    customer_passwd: passwd\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3280,
+        240
+      ],
+      "id": "9a45a0c2-459e-4ad2-a5a0-b20bb6d6d39a",
+      "name": "Générer Données Client Auto"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.passioncampagne9.projets-omega.net/api/addresses?filter[id_customer]={{ $json.customer_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3472,
+        704
+      ],
+      "id": "77c195aa-dea9-4d67-b1ec-e17a472a4fb5",
+      "name": "CHECK ADDRESS",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.passioncampagne9.projets-omega.net/api/customers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            },
+            {
+              "name": "display",
+              "value": "full"
+            },
+            {
+              "name": "filter[email]",
+              "value": "=[{{ $json.user_info.email }}]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2672,
+        496
+      ],
+      "id": "a40f946a-c775-4287-a5c9-45895e892c95",
+      "name": "récupère l’ID client",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4a316ee6-f452-4c11-8eb7-c16ad31575e7",
+              "leftValue": "={{ $json.need_create_customer }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3088,
+        496
+      ],
+      "id": "0d245c4e-5a2c-49c1-8e4f-09ffbc0deefa",
+      "name": "Need Create Customer?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst orderData = $('Vérifier Produit Trouvé').first().json;\nconst customerData = $('Décider Customer Action').first().json;\n\nconst xmlData = data.data || '';\nconst addressMatch = xmlData.match(/address id=\"(\\d+)\"/);\nconst addressId = addressMatch ? parseInt(addressMatch[1]) : null;\nconst hasAddress = !!addressId;\n\nreturn [{\n  json: {\n    session_id:    orderData.session_id,\n    product_id:    orderData.product_id,\n    product_name:  orderData.product_name,\n    product_price: orderData.product_price,\n    quantity:      orderData.quantity,\n    total:         orderData.total,\n    user_info:     orderData.user_info,\n    customer_id:   customerData.customer_id,\n    has_address:   hasAddress,\n    address_id:    addressId,\n    // Propagation des infos de livraison/paiement\n    id_carrier:    orderData.id_carrier,\n    carrier_name:  orderData.carrier_name,\n    payment_module: orderData.payment_module,\n    payment_label: orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3712,
+        704
+      ],
+      "id": "0dad7e80-43b3-4e9f-a16b-6e7bd288b34b",
+      "name": "vérifie si has_address = false"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a32ae76e-d368-4889-adff-847dcdd189d1",
+              "leftValue": "={{ $json.has_address.toBoolean() }} ",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3920,
+        704
+      ],
+      "id": "2ffceb46-ddb7-4971-92b9-39a25ecd00bc",
+      "name": "adresse existe ?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/addresses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<prestashop xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <address>\n    <id_customer>{{ $json.customer_id }}</id_customer>\n    <firstname><![CDATA[{{ $json.customer_firstname }}]]></firstname>\n    <lastname><![CDATA[{{ $json.customer_lastname }}]]></lastname>\n    <address1><![CDATA[{{ $json.user_info.adresse }}]]></address1>\n    <postcode>{{ $json.user_info.code_postal }}</postcode>\n    <city><![CDATA[{{ $json.user_info.ville }}]]></city>\n    <id_country>8</id_country>\n    <phone>{{ $json.user_info.telephone }}</phone>\n  </address>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4112,
+        896
+      ],
+      "id": "7e320ce4-0931-40c6-bfaa-ba438ff6ec8a",
+      "name": "créer une adresse",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const customerCheck = $input.first().json;\nconst orderData = $('Vérifier Produit Trouvé').first().json;\n\nlet customerId = null;\nlet needCreateCustomer = false;\n\n// Vérifier si le client existe\nif (customerCheck.customers && customerCheck.customers.length > 0) {\n  // Client existe\n  customerId = customerCheck.customers[0].id;\n  needCreateCustomer = false;\n} else {\n  // Client n'existe pas\n  needCreateCustomer = true;\n}\n\nreturn [{\n  json: {\n    session_id: orderData.session_id,\n    product_id: orderData.product_id,\n    product_name: orderData.product_name,\n    product_price: orderData.product_price,\n    quantity: orderData.quantity,\n    total: orderData.total,\n    // NOUVEAU: Passer user_info\n    user_info: orderData.user_info || {},\n    customer_id: customerId,\n    need_create_customer: needCreateCustomer,\n    id_carrier: orderData.id_carrier,\n    carrier_name: orderData.carrier_name,\n    payment_module: orderData.payment_module,\n    payment_label: orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        496
+      ],
+      "id": "432076ac-2978-43d1-81f8-e6710ce1dd1e",
+      "name": "Décider Customer Action"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/addresses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <address>\n    <id_customer>{{ $json.customer_id }}</id_customer>\n    <id_country>8</id_country>\n    <alias>Livraison</alias>\n    <firstname><![CDATA[{{ $json.address_firstname }}]]></firstname>\n    <lastname><![CDATA[{{ $json.address_lastname }}]]></lastname>\n    <address1><![CDATA[{{ $json.address_address1 }}]]></address1>\n    <postcode>{{ $json.address_postcode }}</postcode>\n    <city><![CDATA[{{ $json.address_city }}]]></city>\n    <phone>{{ $json.address_phone }}</phone>\n  </address>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4144,
+        240
+      ],
+      "id": "54c2f7f4-c08f-4a94-970f-cff18132dce2",
+      "name": "Create Address",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const addressResponse = $input.first().json;\n\n// Chercher les données précédentes\nlet previousData;\ntry {\n  previousData = $('Générer Adresse Auto').first().json;\n} catch {\n  previousData = $('Extract Customer ID').first().json;\n}\n\nconst addressId = addressResponse.address?.id || null;\n\nreturn [{\n  json: {\n    session_id: previousData.session_id,\n    product_id: previousData.product_id,\n    product_name: previousData.product_name,\n    product_price: previousData.product_price,\n    quantity: previousData.quantity,\n    total: previousData.total,\n    customer_id: previousData.customer_id,\n    secure_key: previousData.secure_key,\n    address_id: addressId,\n    // Propagation\n    id_carrier:    previousData.id_carrier,\n    carrier_name:  previousData.carrier_name,\n    payment_module: previousData.payment_module,\n    payment_label: previousData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4336,
+        240
+      ],
+      "id": "498f035a-57c3-48c3-b7ae-8a6518e56e45",
+      "name": "Extract Address ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const createResponse = $input.first().json;\nconst orderData = $('Générer Données Client Auto').first().json;\n\n// Extraire l'ID et le secure_key du client créé\nconst customerId = createResponse.customer?.id || null;\nconst secureKey = createResponse.customer?.secure_key || null;\n\nreturn [{\n  json: {\n    session_id: orderData.session_id,\n    product_id: orderData.product_id,\n    product_name: orderData.product_name,\n    product_price: orderData.product_price,\n    quantity: orderData.quantity,\n    total: orderData.total,\n    customer_id: customerId,\n    secure_key: secureKey,\n    user_info: orderData.user_info,\n    address_firstname: orderData.address_firstname,\n    address_lastname: orderData.address_lastname,\n    address_address1: orderData.address_address1,\n    address_postcode: orderData.address_postcode,\n    address_city: orderData.address_city,\n    address_phone: orderData.address_phone,\n    // Propagation\n    id_carrier: orderData.id_carrier,\n    carrier_name: orderData.carrier_name,\n    payment_module: orderData.payment_module,\n    payment_label: orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3728,
+        240
+      ],
+      "id": "3d15c743-2003-405d-a5f5-9f7c46cc81c1",
+      "name": "Extract Customer ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Récupérer user_info\nconst userInfo = data.user_info || {};\n\n// Utiliser les vraies données ou valeurs par défaut\nconst firstname = userInfo.prenom || \"Client\";\nconst lastname = userInfo.nom || \"Chatbot\";\nconst address = userInfo.adresse || \"1 rue de la Paix\";\nconst postcode = userInfo.code_postal || \"75000\";\nconst city = userInfo.ville || \"Paris\";\nconst phone = userInfo.telephone || \"0000000000\";\n\nreturn [{\n  json: {\n    ...data,\n    address_firstname: firstname,\n    address_lastname: lastname,\n    address_address1: address,\n    address_postcode: postcode,\n    address_city: city,\n    address_phone: phone\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        240
+      ],
+      "id": "b2310721-b542-403e-a113-1b081b621f8d",
+      "name": "Générer Adresse Auto"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cartResponse = $input.first().json;\n\nlet orderData;\ntry {\n  orderData = $('vérifie si has_address = false').first().json;\n} catch(e) {\n  orderData = $('Extract Address ID').first().json;\n}\n\n// ✅ cart_id depuis JSON directement\nconst cartId = cartResponse.cart?.id || null;\n\nreturn [{\n  json: {\n    session_id:    orderData.session_id,\n    product_id:    orderData.product_id,\n    product_name:  orderData.product_name,\n    product_price: orderData.product_price,\n    quantity:      orderData.quantity,\n    total:         orderData.total,\n    customer_id:   orderData.customer_id,\n    address_id:    orderData.address_id,\n    cart_id:       cartId,\n    id_carrier:    orderData.id_carrier,\n    carrier_name:  orderData.carrier_name,\n    payment_module: orderData.payment_module,\n    payment_label: orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        336
+      ],
+      "id": "0050b96e-9b61-44b6-96b4-fab4e54f43c1",
+      "name": "Extract Cart ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Calculs pour la commande\nconst totalHT = (data.total / 1.2).toFixed(2);\nconst unitPriceHT = (data.product_price / 1.2).toFixed(2);\n\n// Récupérer mode livraison/paiement depuis les données transmises\nlet id_carrier     = data.id_carrier;\nlet payment_module = data.payment_module || 'ps_checkpayment';\nlet payment_label  = data.payment_label  || 'Paiement par chèque';\n\nif (!id_carrier) throw new Error(\"ID Transporteur manquant pour la commande PrestaShop.\");\n\n// Sécurisation XML renforcée avec CDATA\nconst sanitizedAddress = data.user_info?.adresse || \"\";\nconst sanitizedCity    = data.user_info?.ville   || \"\";\nconst sanitizedPrenom  = data.user_info?.prenom  || \"\";\nconst sanitizedNom     = data.user_info?.nom     || \"\";\n\n// XML pour mise à jour du panier\nconst cart_xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <cart>\n    <id>${data.cart_id}</id>\n    <id_customer>${data.customer_id}</id_customer>\n    <id_address_delivery>${data.address_id}</id_address_delivery>\n    <id_address_invoice>${data.address_id}</id_address_invoice>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_carrier>${id_carrier}</id_carrier>\n    <id_shop>1</id_shop>\n    <associations>\n      <cart_rows>\n        <cart_row>\n          <id_product>${data.product_id}</id_product>\n          <id_product_attribute>0</id_product_attribute>\n          <quantity>${data.quantity}</quantity>\n        </cart_row>\n      </cart_rows>\n    </associations>\n  </cart>\n</prestashop>`;\n\n// XML pour création de la commande\nconst order_xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <order>\n    <id_address_delivery>${data.address_id}</id_address_delivery>\n    <id_address_invoice>${data.address_id}</id_address_invoice>\n    <id_cart>${data.cart_id}</id_cart>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_customer>${data.customer_id}</id_customer>\n    <id_carrier>${id_carrier}</id_carrier>\n    <current_state>2</current_state>\n    <module><![CDATA[${payment_module}]]></module>\n    <payment><![CDATA[${payment_label}]]></payment>\n    <total_paid>${data.total}</total_paid>\n    <total_paid_real>${data.total}</total_paid_real>\n    <total_products_wt>${data.total}</total_products_wt>\n    <total_products>${totalHT}</total_products>\n    <conversion_rate>1</conversion_rate>\n    <valid>1</valid>\n    <associations>\n      <order_rows>\n        <order_row>\n          <product_id>${data.product_id}</product_id>\n          <product_quantity>${data.quantity}</product_quantity>\n          <product_name><![CDATA[${data.product_name}]]></product_name>\n          <unit_price_tax_incl>${data.product_price}</unit_price_tax_incl>\n          <unit_price_tax_excl>${unitPriceHT}</unit_price_tax_excl>\n        </order_row>\n      </order_rows>\n    </associations>\n  </order>\n</prestashop>`;\n\nreturn [{\n  json: {\n    ...data,\n    id_carrier,\n    payment_module,\n    payment_label,\n    cart_xml: cart_xml,\n    order_xml: order_xml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5008,
+        336
+      ],
+      "id": "0f1ccd0c-f0f3-45fd-a042-dfd30abd5822",
+      "name": "XML MAJ Panier"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://www.passioncampagne9.projets-omega.net/api/carts/{{ $json.cart_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "={{ $json.cart_xml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5216,
+        336
+      ],
+      "id": "68efca60-ea6d-4e3f-a4b2-d481fd075b58",
+      "name": "PUT Panier",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/carts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <cart>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_customer>{{ $json.customer_id }}</id_customer>\n    <id_address_delivery>{{ $json.address_id }}</id_address_delivery>\n    <id_address_invoice>{{ $json.address_id }}</id_address_invoice>\n  </cart>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4592,
+        336
+      ],
+      "id": "b9f34b1a-8e15-499e-a0de-facd9449f8de",
+      "name": "CREATION PANIER",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items[0].json;\n\n// ============================================\n// ✅ GUARD ANTI-BOUCLE : Si confirmé ou complet\n// ne pas reposer de questions, passer directement\n// ✅ FIX : Ignoré si nouvelle commande\n// ============================================\nconst fusionData = $('Fusion Session4').first().json;\n\nconst isNewOrder = data.is_new_order === true;\n\nif (!isNewOrder && (fusionData.confirmed === true || fusionData.is_complete === true)) {\n  const product  = fusionData.product  || data.product  || null;\n  const quantity = fusionData.quantity || data.quantity || null;\n  return [{\n    json: {\n      ...data,\n      ...fusionData,\n      has_product:    !!product,\n      has_quantity:   !!quantity,\n      product,\n      quantity,\n      question: fusionData.reply || \"Finalisation en cours...\"\n    }\n  }];\n}\n\n// ============================================\n// ✅ Récupérer product et quantity depuis Fusion\n// ✅ FIX : Si nouvelle commande, ignorer l'ancien product de Fusion\n// ============================================\nconst product  = isNewOrder\n  ? (data.product || null)\n  : (fusionData.product  || data.product  || null);\n\nconst quantity = isNewOrder\n  ? (data.quantity || null)\n  : (fusionData.quantity || data.quantity || null);\n\n// ✅ FIX : Si nouvelle commande, partir d'un user_info vide\nconst ui = isNewOrder\n  ? (data.user_info || {})\n  : (fusionData.user_info || data.user_info || {});\n\nconst currentMessage = data.current_message || '';\n\n// ============================================\n// SÉCURITÉ : Fonction de Sanitization XML\n// ============================================\nconst sanitize = (str) => {\n  if (typeof str !== 'string') return str;\n  return str\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&apos;');\n};\n\n// ============================================\n// ETAPE 1 — Extraire la réponse du client\n// ✅ FIX : next_field ignoré si nouvelle commande\n// ============================================\nconst nextFieldBefore = isNewOrder\n  ? null\n  : (fusionData.next_field || data.next_field || null);\n\nif (nextFieldBefore && currentMessage) {\n  let val = currentMessage.trim();\n  switch (nextFieldBefore) {\n    case 'prenom':         ui.prenom = sanitize(val); break;\n    case 'nom':            ui.nom = sanitize(val); break;\n    case 'email':          ui.email = val.toLowerCase(); break;\n    case 'password':       ui.password = val; break;\n    case 'adresse':        ui.adresse = sanitize(val); break;\n    case 'code_postal':    ui.code_postal = val; break;\n    case 'ville':          ui.ville = sanitize(val); break;\n    case 'telephone':      ui.telephone = val; break;\n    case 'mode_livraison': ui.mode_livraison = val.toLowerCase(); break;\n    case 'mode_paiement':  ui.mode_paiement = val.toLowerCase(); break;\n  }\n}\n\n// ============================================\n// ETAPE 2 — Validation unifiée\n// ============================================\nconst errors = {};\nconst emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;\nconst telRegex   = /^(0|\\+33|0033)[1-9][0-9]{8}$/;\nconst cpRegex    = /^[0-9]{5}$/;\n\nif (ui.email && !emailRegex.test(ui.email)) {\n  ui.email = null;\n  errors.email = `L'email \"${currentMessage}\" est invalide. Format : exemple@mail.com`;\n}\n\nif (ui.telephone) {\n  const cleanTel = ui.telephone.replace(/[\\s\\.\\-]/g, '');\n  if (!telRegex.test(cleanTel)) {\n    ui.telephone = null;\n    errors.telephone = `Numéro invalide. Format attendu : 0612345678`;\n  } else {\n    ui.telephone = cleanTel;\n  }\n}\n\nif (ui.code_postal && !cpRegex.test(ui.code_postal)) {\n  ui.code_postal = null;\n  errors.code_postal = `Code postal invalide (5 chiffres attendus).`;\n}\n\nif (ui.password && ui.password.length < 6) {\n  ui.password = null;\n  errors.password = `Mot de passe trop court (6 caractères minimum).`;\n}\n\nconst VALID_LIVRAISON = ['domicile', 'point relais', 'express'];\nif (ui.mode_livraison && !VALID_LIVRAISON.includes(ui.mode_livraison)) {\n  ui.mode_livraison = null;\n  errors.mode_livraison = `Choix invalide. Veuillez dire : domicile ou point relais.`;\n}\n\nconst VALID_PAIEMENT = ['cheque', 'chèque', 'virement', 'carte', 'livraison'];\nif (ui.mode_paiement && !VALID_PAIEMENT.includes(ui.mode_paiement)) {\n  ui.mode_paiement = null;\n  errors.mode_paiement = `Choix invalide. Modes acceptés : chèque, virement, carte ou livraison.`;\n}\nif (ui.mode_paiement === 'cheque') ui.mode_paiement = 'chèque';\n\n// ============================================\n// ETAPE 3 — Prochain champ\n// ============================================\nconst fields = [\n  { key: 'prenom',         question: `Quel est votre prénom ?` },\n  { key: 'nom',            question: (ui) => `Merci ${ui.prenom} ! Quel est votre nom de famille ?` },\n  { key: 'email',          question: `Quelle est votre adresse email ?` },\n  { key: 'password',       question: `Choisissez un mot de passe (min. 6 caractères).` },\n  { key: 'telephone',      question: `Votre numéro de téléphone (pour le livreur) ?` },\n  { key: 'adresse',        question: `Votre adresse de livraison (rue et numéro) ?` },\n  { key: 'code_postal',    question: `Votre code postal (5 chiffres) ?` },\n  { key: 'ville',          question: `Et votre ville ?` },\n  { key: 'mode_livraison', question: `Mode de livraison :\\n  - domicile\\n  - point relais` },\n  { key: 'mode_paiement',  question: `Mode de paiement :\\n  - chèque\\n  - virement\\n  - carte\\n  - livraison (paiement à la livraison)` },\n];\n\nconst missing = fields.filter(f => !ui[f.key]);\nconst isComplete = missing.length === 0;\n\n// ============================================\n// ETAPE 4 — Construction de la réponse\n// ============================================\nconst totalFields = fields.length;\nconst done = totalFields - missing.length;\nconst progressBar = '█'.repeat(done) + '░'.repeat(totalFields - done);\nconst progressPct = Math.round((done / totalFields) * 100);\n\nlet question = '';\nconst errorKey = nextFieldBefore && errors[nextFieldBefore] ? nextFieldBefore : null;\n\nif (errorKey) {\n  question = `⚠️ ${errors[errorKey]}`;\n\n} else if (!nextFieldBefore && !ui.prenom) {\n  question = `Commençons par votre prénom.\\n\\n${fields[0].question}`;\n\n} else if (isComplete) {\n  const lLabel = ui.mode_livraison === 'domicile' ? '🏠 Domicile' : '📦 Point relais';\n  const pLabel = ui.mode_paiement === 'chèque'    ? '🧾 Chèque'\n               : ui.mode_paiement === 'virement'  ? '🏦 Virement bancaire'\n               : ui.mode_paiement === 'livraison' ? '🚚 Paiement à la livraison'\n               : '💳 Carte bancaire';\n\n  question =\n    `✅ Récapitulatif de votre commande :\\n\\n` +\n    `🛒 Produit   : ${product} x${quantity}\\n` +\n    `👤 Client    : ${ui.prenom} ${ui.nom}\\n` +\n    `📧 Email     : ${ui.email}\\n` +\n    `📞 Tél       : ${ui.telephone}\\n` +\n    `📍 Livraison : ${ui.adresse}, ${ui.code_postal} ${ui.ville}\\n` +\n    `🚚 Transport : ${lLabel}\\n` +\n    `💰 Paiement  : ${pLabel}\\n\\n` +\n    `Confirmez-vous la commande ? (Répondez OUI ou NON)`;\n\n} else {\n  const next = missing[0];\n  const q = typeof next.question === 'function' ? next.question(ui) : next.question;\n  question = `${q}\\n\\n[${progressBar}] ${progressPct}%`;\n}\n\n// ============================================\n// ETAPE 5 — Mapping technique\n// ID 1 = Click and collect (point relais)\n// ID 2 = My carrier (domicile)\n// ============================================\nlet id_carrier     = isNewOrder ? null : (fusionData.id_carrier     || null);\nlet payment_module = isNewOrder ? null : (fusionData.payment_module || null);\nlet payment_label  = isNewOrder ? null : (fusionData.payment_label  || null);\n\nif (isComplete) {\n  const mapC = {\n    'domicile':     2,\n    'point relais': 1,\n    'express':      2\n  };\n  id_carrier = mapC[ui.mode_livraison] || 2;\n\n  const mapP = {\n    'chèque':    { m: 'ps_checkpayment', l: 'Paiement par chèque' },\n    'virement':  { m: 'ps_wirepayment',  l: 'Virement bancaire' },\n    'carte':     { m: 'starthere',       l: 'Carte Bancaire' },\n    'livraison': { m: 'ps_cod',          l: 'Paiement à la livraison' }\n  };\n  const p = mapP[ui.mode_paiement] || mapP['chèque'];\n  payment_module = p.m;\n  payment_label  = p.l;\n}\n\n// ============================================\n// RETOUR FINAL\n// ============================================\nconst nextField = isComplete ? null : (missing[0]?.key || null);\n\nreturn [{\n  json: {\n    ...data,\n    user_info:      ui,\n    question,\n    product,\n    quantity,\n    is_complete:    isComplete,\n    has_product:    !!product,\n    has_quantity:   !!quantity,\n    next_field:     nextField,\n    is_new_order:   isNewOrder,\n    id_carrier,\n    payment_module,\n    payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        496
+      ],
+      "id": "40cee596-f46f-4a73-9bea-23a7ac828b02",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.question }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2160,
+        688
+      ],
+      "id": "fab76472-ba72-4f6b-87ae-3f8454759f58",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "url": "=https://helpful-hog-77527.upstash.io/get/session_{{ $json.body.session_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer gQAAAAAAAS7XAAIncDJjNDg1NGRiOWFhMzM0NTk0Yjk5ZTkzYTZiMWY3Mzc0OXAyNzc1Mjc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -512,
+        480
+      ],
+      "id": "2945ffa2-00c2-4c65-9937-6abf7bd5a9cb",
+      "name": "Lire Session Redis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const question = $json.question.replace(/\\n/g, '\\n');\nreturn {\n  ...$json,\n  question_clean: $json.question\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        688
+      ],
+      "id": "de5a006e-ef29-4e7d-9b6e-f0d0d6e02706",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        768
+      ],
+      "id": "9c443837-324c-4e42-a098-b8847d217c5d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <order>\n    <id_address_delivery>{{ $('XML MAJ Panier').item.json.address_id }}</id_address_delivery>\n    <id_address_invoice>{{ $('XML MAJ Panier').item.json.address_id }}</id_address_invoice>\n    <id_cart>{{ $('XML MAJ Panier').item.json.cart_id }}</id_cart>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_customer>{{ $('XML MAJ Panier').item.json.customer_id }}</id_customer>\n    <id_carrier>{{ $('XML MAJ Panier').item.json.id_carrier }}</id_carrier>\n    <secure_key>{{ $('Extract Address ID').item.json.secure_key }}</secure_key>\n    <current_state>{{ \n  {\n    'ps_cod':          8,\n    'ps_checkpayment': 1,\n    'ps_wirepayment':  10,\n    'starthere':       2\n  }[$('XML MAJ Panier').item.json.payment_module] ?? 2 \n}}</current_state>\n    <module>{{ $('XML MAJ Panier').item.json.payment_module }}</module>\n    <payment>{{ $('XML MAJ Panier').item.json.payment_label }}</payment>\n    <total_paid>{{ $('XML MAJ Panier').item.json.total }}</total_paid>\n    <total_paid_real>{{ $('XML MAJ Panier').item.json.total }}</total_paid_real>\n    <total_paid_tax_incl>{{ $('XML MAJ Panier').item.json.total }}</total_paid_tax_incl>\n    <total_paid_tax_excl>{{ ($('XML MAJ Panier').item.json.total / 1.2).toFixed(2) }}</total_paid_tax_excl>\n    <total_products_wt>{{ $('XML MAJ Panier').item.json.total }}</total_products_wt>\n    <total_products>{{ ($('XML MAJ Panier').item.json.product_price / 1.2 * $('XML MAJ Panier').item.json.quantity).toFixed(2) }}</total_products>\n    <total_shipping>0.000000</total_shipping>\n    <total_shipping_tax_incl>0.000000</total_shipping_tax_incl>\n    <total_shipping_tax_excl>0.000000</total_shipping_tax_excl>\n    <total_wrapping>0.000000</total_wrapping>\n    <total_discounts>0.000000</total_discounts>\n    <conversion_rate>1</conversion_rate>\n    <invoice_number>0</invoice_number>\n    <delivery_number>0</delivery_number>\n    <valid>1</valid>\n    <associations>\n      <order_rows>\n        <order_row>\n          <product_id>{{ $('XML MAJ Panier').item.json.product_id }}</product_id>\n          <product_attribute_id>0</product_attribute_id>\n          <product_quantity>{{ $('XML MAJ Panier').item.json.quantity }}</product_quantity>\n          <product_name><![CDATA[{{ $('XML MAJ Panier').item.json.product_name }}]]></product_name>\n          <product_reference></product_reference>\n          <unit_price_tax_incl>{{ $('XML MAJ Panier').item.json.product_price }}</unit_price_tax_incl>\n          <unit_price_tax_excl>{{ ($('XML MAJ Panier').item.json.product_price / 1.2).toFixed(2) }}</unit_price_tax_excl>\n        </order_row>\n      </order_rows>\n    </associations>\n  </order>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5408,
+        336
+      ],
+      "id": "d85384b2-dcf1-4cc3-b32c-e0b1b5ea8910",
+      "name": "creer commande1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ed11f557-959f-4586-b5e4-f2717ef24136",
+              "leftValue": "={{ $json.products.length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2096,
+        480
+      ],
+      "id": "65ac3b43-73bf-40fb-8fee-d0b42ddddbff",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"response\": \"Désolé, l'article '{{ $node[\\\"Search Product\\\"].json[\\\"name\\\"] || \\\"ce produit\\\" }}' n'a pas été trouvé dans notre catalogue PassionCampagne. Voulez-vous essayer un autre nom ?\",\n  \"message\": \"Désolé, l'article '{{ $node[\\\"Search Product\\\"].json[\\\"name\\\"] || \\\"ce produit\\\" }}' n'a pas été trouvé dans notre catalogue PassionCampagne. Voulez-vous essayer un autre nom ?\",\n  \"text\": \"Désolé, l'article '{{ $node[\\\"Search Product\\\"].json[\\\"name\\\"] || \\\"ce produit\\\" }}' n'a pas été trouvé dans notre catalogue PassionCampagne. Voulez-vous essayer un autre nom ?\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2304,
+        272
+      ],
+      "id": "89a577fa-3647-4927-ab7d-df6766809221",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "track_order",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cff2adeb-0a8f-4212-86d1-52bc5f2e8ac9"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d21e20a6-9e31-4c66-9145-9a179d9c002d",
+                    "leftValue": "={{ $json.confirmed }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "59c3d66e-0671-466b-a6ac-3e0af0d1a9e6",
+                    "leftValue": "={{ $json.confirmed }}",
+                    "rightValue": "track_order",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        480
+      ],
+      "id": "e7221f43-23f8-4671-b72b-fed8b00cc729",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "url": "https://www.passioncampagne9.projets-omega.net/api/products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter[name]",
+              "value": "=[{{ $json.product }}]"
+            },
+            {
+              "name": "output_format",
+              "value": "JSON"
+            },
+            {
+              "name": "display",
+              "value": "full"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1872,
+        480
+      ],
+      "id": "ed1a9410-6513-49d1-ad17-25088651b477",
+      "name": "Search Product2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $json.output;\n\nlet previousSession = {};\ntry {\n  previousSession = $('Init Session').first().json;\n} catch (e) {\n  try {\n    previousSession = $('Init Session1').first().json;\n  } catch (e2) {\n    previousSession = { user_info: {}, session_id: \"default\" };\n  }\n}\n\nconst default_user_info = {\n  prenom: null, nom: null, email: null, password: null,\n  adresse: null, code_postal: null, ville: null, telephone: null,\n  mode_livraison: null, mode_paiement: null\n};\n\nlet current_message = '';\ntry {\n  current_message = $('Webhook').first().json.body.commande ||\n                    $('Webhook').first().json.body.message  ||\n                    $('Webhook').first().json.body.text     || '';\n} catch(e) {\n  current_message = '';\n}\nconst msg = current_message.toLowerCase().trim();\nconst isShortMessage = msg.length <= 15;\n\n// ✅ RESTAURATION des listes dynamiques depuis Redis\nconst availableCarriers = previousSession.available_carriers || [];\nconst availablePayments = previousSession.available_payments || [];\n\n// ✅ DÉTECTION OUI/NON\nconst wasWaitingConfirmation = previousSession.waiting_confirmation === true;\n\nconst clientSaidYes = wasWaitingConfirmation &&\n  ['oui', 'yes', 'ok', 'confirme', 'valide'].some(w => msg === w || msg.includes(w));\n\nconst clientSaidNo = wasWaitingConfirmation && isShortMessage &&\n  ['non', 'no', 'annule', 'cancel', 'annuler'].some(w => msg === w || msg.includes(w));\n\nif (clientSaidYes) {\n  return {\n    session_id:           previousSession.session_id    || \"sess_default\",\n    intent:               \"order_product\",\n    product:              previousSession.product       || null,\n    quantity:             previousSession.quantity      || null,\n    product_id:           previousSession.product_id   || null,\n    product_price:        previousSession.product_price || null,\n    user_info:            previousSession.user_info     || {},\n    is_complete:          true,\n    waiting_confirmation: false,\n    confirmed:            true,\n    reply:                \"Parfait ! Je finalise votre commande, un instant... ⏳\",\n    id_carrier:           previousSession.id_carrier,\n    carrier_name:         previousSession.carrier_name,\n    payment_module:       previousSession.payment_module,\n    payment_label:        previousSession.payment_label,\n    available_carriers:   availableCarriers,\n    available_payments:   availablePayments,\n    order_tracking:       previousSession.order_tracking || { numero_commande: null, email_verification: null }\n  };\n}\n\nif (clientSaidNo) {\n  return {\n    session_id:           previousSession.session_id || \"sess_default\",\n    intent:               \"other\",\n    product:              null, quantity: null, product_id: null, product_price: null,\n    user_info:            default_user_info,\n    is_complete:          false,\n    waiting_confirmation: false,\n    confirmed:            false,\n    reply:                \"Commande annulée. N'hésitez pas à recommencer quand vous voulez !\",\n    available_carriers:   [],\n    available_payments:   [],\n    order_tracking:       { numero_commande: null, email_verification: null }\n  };\n}\n\n// PARSING JSON de l'IA\nlet parsedAI = {};\ntry {\n  const cleanText = aiOutput.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n  const match = cleanText.match(/\\{[\\s\\S]*\\}/);\n  parsedAI = match ? JSON.parse(match[0]) : {};\n} catch (e) {\n  parsedAI = { reply: \"Désolé, j'ai rencontré une erreur. Pouvez-vous répéter ?\", user_info: {} };\n}\n\nif (parsedAI.intent === 'track_order') {\n  const oldTracking = previousSession.order_tracking || {};\n  const newTracking = parsedAI.order_tracking || {};\n  return {\n    session_id:           previousSession.session_id || \"sess_default\",\n    intent:               \"track_order\",\n    product:              null, quantity: null, product_id: null, product_price: null,\n    user_info:            default_user_info,\n    is_complete:          false,\n    waiting_confirmation: false,\n    confirmed:            false,\n    reply:                parsedAI.reply || \"Quel est votre numéro de commande ?\",\n    available_carriers:   [],\n    available_payments:   [],\n    order_tracking: {\n      numero_commande:    newTracking.numero_commande    || oldTracking.numero_commande    || null,\n      email_verification: newTracking.email_verification || oldTracking.email_verification || null\n    }\n  };\n}\n\nconst isOffTopic = (parsedAI.intent === 'other' || parsedAI.intent === 'question');\nif (isOffTopic) {\n  return {\n    session_id:           previousSession.session_id || \"sess_default\",\n    intent:               parsedAI.intent,\n    product:              null, quantity: null, product_id: null, product_price: null,\n    user_info:            default_user_info,\n    is_complete:          false,\n    waiting_confirmation: false,\n    confirmed:            false,\n    reply:                parsedAI.reply || \"Bonjour ! Comment puis-je vous aider ?\",\n    available_carriers:   [],\n    available_payments:   [],\n    order_tracking:       { numero_commande: null, email_verification: null }\n  };\n}\n\n// FUSION DES DONNÉES\nconst oldUI = previousSession.user_info || {};\nconst newUI = parsedAI.user_info || {};\nlet ui = {\n  prenom:         newUI.prenom         || oldUI.prenom         || null,\n  nom:            newUI.nom            || oldUI.nom            || null,\n  email:          newUI.email          || oldUI.email          || null,\n  password:       newUI.password       || oldUI.password       || null,\n  adresse:        newUI.adresse        || oldUI.adresse        || null,\n  code_postal:    newUI.code_postal    || oldUI.code_postal    || null,\n  ville:          newUI.ville          || oldUI.ville          || null,\n  telephone:      newUI.telephone      || oldUI.telephone      || null,\n  mode_livraison: newUI.mode_livraison || oldUI.mode_livraison || null,\n  mode_paiement:  newUI.mode_paiement  || oldUI.mode_paiement  || null\n};\n\nconst product  = parsedAI.product  || previousSession.product  || null;\nconst quantity = parsedAI.quantity || previousSession.quantity || null;\n\n// ✅ MAPPING DYNAMIQUE — carriers depuis l'API\n// L'IA retourne id_carrier et carrier_name depuis get_carriers\n// On vérifie que l'ID retourné existe bien dans la liste API\nlet id_carrier   = null;\nlet carrier_name = null;\n\nconst rawCarrierId   = parsedAI.id_carrier   || previousSession.id_carrier   || null;\nconst rawCarrierName = parsedAI.carrier_name || previousSession.carrier_name || null;\n\nif (rawCarrierId && !isNaN(parseInt(rawCarrierId))) {\n  id_carrier   = parseInt(rawCarrierId);\n  carrier_name = rawCarrierName;\n} else if (rawCarrierName && availableCarriers.length > 0) {\n  // Fallback : cherche par nom dans la liste disponible\n  const found = availableCarriers.find(c =>\n    c.name.toLowerCase().includes(rawCarrierName.toLowerCase()) ||\n    rawCarrierName.toLowerCase().includes(c.name.toLowerCase())\n  );\n  if (found) { id_carrier = parseInt(found.id); carrier_name = found.name; }\n} else if (ui.mode_livraison && availableCarriers.length > 0) {\n  // Fallback : cherche par choix du client (ex: \"1\", \"domicile\", \"click\")\n  const choix = ui.mode_livraison.toLowerCase().trim();\n  const index = parseInt(choix) - 1;\n  if (!isNaN(index) && availableCarriers[index]) {\n    id_carrier   = parseInt(availableCarriers[index].id);\n    carrier_name = availableCarriers[index].name;\n  } else {\n    const found = availableCarriers.find(c =>\n      c.name.toLowerCase().includes(choix) || choix.includes(c.name.toLowerCase())\n    );\n    if (found) { id_carrier = parseInt(found.id); carrier_name = found.name; }\n  }\n}\n\n// ✅ MAPPING DYNAMIQUE — paiements depuis l'API\nlet payment_module = null;\nlet payment_label  = null;\n\nconst rawModule = parsedAI.payment_module || previousSession.payment_module || null;\nconst rawLabel  = parsedAI.payment_label  || previousSession.payment_label  || null;\n\nif (rawModule) {\n  payment_module = rawModule;\n  payment_label  = rawLabel;\n} else if (ui.mode_paiement && availablePayments.length > 0) {\n  // Fallback : cherche par choix du client (ex: \"1\", \"virement\", \"carte\")\n  const choix = ui.mode_paiement.toLowerCase().trim();\n  const index = parseInt(choix) - 1;\n  if (!isNaN(index) && availablePayments[index]) {\n    payment_module = availablePayments[index].module;\n    payment_label  = availablePayments[index].label;\n  } else {\n    const found = availablePayments.find(p =>\n      p.label.toLowerCase().includes(choix) || choix.includes(p.label.toLowerCase())\n    );\n    if (found) { payment_module = found.module; payment_label = found.label; }\n  }\n}\n\n// ✅ MISE À JOUR des listes disponibles si l'IA en retourne de nouvelles\nconst newCarriers = parsedAI.available_carriers || availableCarriers;\nconst newPayments = parsedAI.available_payments || availablePayments;\n\n// VALIDATEURS\nconst emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;\nconst validationErrors = [];\n\nif (ui.email && !emailRegex.test(ui.email)) {\n  validationErrors.push(\"❌ Format d'email invalide (ex: nom@mail.com)\");\n  ui.email = null;\n}\nif (ui.telephone) {\n  const cleanTel = ui.telephone.replace(/[\\s\\.\\-]/g, '');\n  if (cleanTel.replace(/[^0-9]/g, '').length < 8) {\n    validationErrors.push(\"❌ Numéro de téléphone invalide (minimum 8 chiffres)\");\n    ui.telephone = null;\n  } else {\n    ui.telephone = cleanTel;\n  }\n}\nif (ui.password && ui.password.length < 6) {\n  validationErrors.push(\"❌ Mot de passe trop court (6 caractères minimum)\");\n  ui.password = null;\n}\nif (ui.code_postal && !/^[0-9]{3,10}$/.test(ui.code_postal)) {\n  validationErrors.push(\"❌ Code postal invalide\");\n  ui.code_postal = null;\n}\n\nif (validationErrors.length > 0) {\n  return {\n    session_id:           previousSession.session_id || \"sess_default\",\n    intent:               \"order_product\",\n    product, quantity,\n    product_id:           previousSession.product_id    || null,\n    product_price:        previousSession.product_price || null,\n    user_info:            ui,\n    is_complete:          false,\n    waiting_confirmation: false,\n    confirmed:            false,\n    reply:                \"⚠️ Certaines informations sont incorrectes :\\n\" + validationErrors.join('\\n') + '\\n\\nPouvez-vous me redonner ces éléments ?',\n    available_carriers:   newCarriers,\n    available_payments:   newPayments,\n    order_tracking:       { numero_commande: null, email_verification: null }\n  };\n}\n\n// COMPLÉTUDE\nconst basicComplete = !!(\n  product && quantity &&\n  ui.prenom && ui.nom && ui.email && ui.password &&\n  ui.adresse && ui.ville && ui.code_postal\n);\n\nconst isComplete = basicComplete && !!id_carrier && !!payment_module;\nconst isConfirmed = previousSession.confirmed === true;\nconst waitingConfirmation = isComplete && !isConfirmed;\n\nlet reply = parsedAI.reply || \"Je vous écoute, comment puis-je vous aider ?\";\n\nif (isComplete && !isConfirmed) {\n  reply =\n    `Récapitulatif de votre commande :\\n\\n` +\n    `Produit      : ${product} x${quantity}\\n` +\n    `Client       : ${ui.prenom} ${ui.nom}\\n` +\n    `Email        : ${ui.email}\\n` +\n    `Tél          : ${ui.telephone}\\n` +\n    `Livraison    : ${ui.adresse}, ${ui.code_postal} ${ui.ville}\\n` +\n    `Transporteur : ${carrier_name || id_carrier}\\n` +\n    `Paiement     : ${payment_label || payment_module}\\n\\n` +\n    `Confirmez-vous cette commande ?\\nRépondez OUI pour valider ou NON pour annuler.`;\n}\n\nreturn {\n  session_id:           previousSession.session_id || \"sess_default\",\n  intent:               parsedAI.intent || previousSession.intent || \"commande\",\n  product, quantity,\n  product_id:           previousSession.product_id    || null,\n  product_price:        previousSession.product_price || null,\n  user_info:            ui,\n  is_complete:          false,\n  waiting_confirmation: waitingConfirmation,\n  confirmed:            false,\n  reply,\n  id_carrier,\n  carrier_name,\n  payment_module,\n  payment_label,\n  // ✅ PERSISTANCE des listes dynamiques en session Redis\n  available_carriers:   newCarriers,\n  available_payments:   newPayments,\n  order_tracking:       { numero_commande: null, email_verification: null }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        496
+      ],
+      "id": "1c55e05e-bce5-4fb0-9470-fbf57c984bb9",
+      "name": "Fusion Session4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{ ($json.reply || $json.question || '').replace(/\\n/g, '\\\\n') }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1616,
+        800
+      ],
+      "id": "0dd0703b-f205-4655-a874-21c9b5869439",
+      "name": "Respond to Webhook12"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Passe toutes les données de Fusion Session\nconst fusionData = $input.first().json;\nreturn [{ json: fusionData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        880
+      ],
+      "id": "2fd00bdf-dbc0-4237-9ecc-3a7570cf41ee",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://helpful-hog-77527.upstash.io/set/session_{{ $json.session_id }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ex",
+              "value": "86400"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer gQAAAAAAAS7XAAIncDJjNDg1NGRiOWFhMzM0NTk0Yjk5ZTkzYTZiMWY3Mzc0OXAyNzc1Mjc"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=text/plain",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1616,
+        992
+      ],
+      "id": "35e655ed-4332-49f5-ac0d-041d1c678ca6",
+      "name": "Sauvegarder Session5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cartData = $input.first().json;\nconst orderData = $('XML MAJ Panier1').first().json;\n\nreturn [{\n  json: {\n    session_id:    orderData.session_id,\n    product_id:    orderData.product_id,\n    product_name:  orderData.product_name,\n    product_price: orderData.product_price,\n    quantity:      orderData.quantity,\n    total:         orderData.total,\n    customer_id:   orderData.customer_id,\n    address_id:    orderData.address_id,\n    cart_id:       orderData.cart_id,\n    order_xml:     orderData.order_xml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5168,
+        688
+      ],
+      "id": "f3d3c4f3-8d3e-4804-93d9-ab1b744d69e2",
+      "name": "Pass XML Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "={{ $json.order_xml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5392,
+        688
+      ],
+      "id": "b23f536a-4b9b-4870-b647-8b47e15898f8",
+      "name": "creer commande",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cartResponse = $input.first().json;\n\n// Récupérer les données depuis le bon nœud selon le chemin pris\nlet orderData;\ntry {\n  orderData = $('vérifie si has_address = false').first().json;\n} catch(e) {\n  try {\n    orderData = $('Extract Address ID').first().json;\n  } catch(e2) {\n    orderData = $('Décider Customer Action').first().json;\n  }\n}\n\n// ✅ cart_id depuis JSON directement\nconst cartId = cartResponse.cart?.id || null;\n\nreturn [{\n  json: {\n    session_id:    orderData.session_id,\n    product_id:    orderData.product_id,\n    product_name:  orderData.product_name,\n    product_price: orderData.product_price,\n    quantity:      orderData.quantity,\n    total:         orderData.total,\n    customer_id:   orderData.customer_id,\n    address_id:    orderData.address_id,\n    cart_id:       cartId,\n    id_carrier:    orderData.id_carrier,\n    carrier_name:  orderData.carrier_name,\n    payment_module: orderData.payment_module,\n    payment_label:  orderData.payment_label\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4560,
+        688
+      ],
+      "id": "07a16aee-653d-432b-b482-b4973ed362f0",
+      "name": "Extract Cart ID1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Calculs pour la commande\nconst totalHT = (data.total / 1.2).toFixed(2);\nconst unitPriceHT = (data.product_price / 1.2).toFixed(2);\n\n// Récupérer mode livraison/paiement depuis les données transmises (Priorité ✅)\nlet id_carrier     = data.id_carrier;\nlet payment_module = data.payment_module || 'ps_checkpayment';\nlet payment_label  = data.payment_label  || 'Paiement par chèque';\n\n// Fallback uniquement si vraiment vide au cas où\ntry {\n  if (!id_carrier) {\n    const codeJs = $('Code in JavaScript').first().json;\n    if (codeJs.id_carrier && !isNaN(parseInt(codeJs.id_carrier))) id_carrier = parseInt(codeJs.id_carrier);\n    if (!payment_module) payment_module = codeJs.payment_module;\n    if (!payment_label)  payment_label  = codeJs.payment_label;\n  }\n} catch(e) {}\n\n// Sécurité : Si toujours pas d'ID carrier, on signale une erreur propre\nif (!id_carrier) throw new Error(\"ID Transporteur manquant pour la commande existante PrestaShop.\");\n\n// XML pour mise à jour du panier\nconst cart_xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <cart>\n    <id>${data.cart_id}</id>\n    <id_customer>${data.customer_id}</id_customer>\n    <id_address_delivery>${data.address_id}</id_address_delivery>\n    <id_address_invoice>${data.address_id}</id_address_invoice>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_carrier>${id_carrier}</id_carrier>\n    <id_shop>1</id_shop>\n    <associations>\n      <cart_rows>\n        <cart_row>\n          <id_product>${data.product_id}</id_product>\n          <id_product_attribute>0</id_product_attribute>\n          <quantity>${data.quantity}</quantity>\n        </cart_row>\n      </cart_rows>\n    </associations>\n  </cart>\n</prestashop>`;\n\n// XML pour création de la commande\nconst order_xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <order>\n    <id_address_delivery>${data.address_id}</id_address_delivery>\n    <id_address_invoice>${data.address_id}</id_address_invoice>\n    <id_cart>${data.cart_id}</id_cart>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_customer>${data.customer_id}</id_customer>\n    <id_carrier>${id_carrier}</id_carrier>\n    <current_state>2</current_state>\n    <module>${payment_module}</module>\n    <payment>${payment_label}</payment>\n    <total_paid>${data.total}</total_paid>\n    <total_paid_real>${data.total}</total_paid_real>\n    <total_products_wt>${data.total}</total_products_wt>\n    <total_products>${totalHT}</total_products>\n    <conversion_rate>1</conversion_rate>\n    <valid>1</valid>\n    <associations>\n      <order_rows>\n        <order_row>\n          <product_id>${data.product_id}</product_id>\n          <product_quantity>${data.quantity}</product_quantity>\n          <product_name><![CDATA[${data.product_name}]]></product_name>\n          <unit_price_tax_incl>${data.product_price}</unit_price_tax_incl>\n          <unit_price_tax_excl>${unitPriceHT}</unit_price_tax_excl>\n        </order_row>\n      </order_rows>\n    </associations>\n  </order>\n</prestashop>`;\n\nreturn [{\n  json: {\n    ...data,\n    id_carrier,\n    payment_module,\n    payment_label,\n    cart_xml: cart_xml,\n    order_xml: order_xml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4768,
+        688
+      ],
+      "id": "de100fb8-8097-4ec2-a07b-baa18622f18a",
+      "name": "XML MAJ Panier1"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://www.passioncampagne9.projets-omega.net/api/carts/{{ $json.cart_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "={{ $json.cart_xml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4976,
+        688
+      ],
+      "id": "803ad23b-6d4e-4cc0-823d-70aee0da2ce6",
+      "name": "PUT Panier1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/carts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<prestashop>\n  <cart>\n    <id_currency>1</id_currency>\n    <id_lang>1</id_lang>\n    <id_customer>{{ $json.customer_id }}</id_customer>\n    <id_address_delivery>{{ $json.address_id }}</id_address_delivery>\n    <id_address_invoice>{{ $json.address_id }}</id_address_invoice>\n  </cart>\n</prestashop>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4352,
+        688
+      ],
+      "id": "92ac725c-0161-4f22-91ea-e05d54bfed38",
+      "name": "CREATION PANIER1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nlet orderData = {};\nlet session_id = null;\n\n// Sécurité : On récupère les données depuis le nœud de mise à jour du panier\ntry {\n  orderData = $('XML MAJ Panier').first().json;\n  session_id = orderData.session_id;\n} catch (e) {\n  try {\n    orderData = $('XML MAJ Panier1').first().json;\n    session_id = orderData.session_id;\n  } catch (e2) {\n    orderData = { product_name: \"Produit\", quantity: 1, total: 0 };\n  }\n}\n\nlet userInfo = {};\nlet prenom = '', nom = '', email = '';\n\ntry {\n  const clientData = $('Générer Données Client Auto').first().json;\n  prenom = clientData.customer_firstname || '';\n  nom    = clientData.customer_lastname  || '';\n  email  = clientData.customer_email     || '';\n} catch(e) {\n  try {\n    const backupData = $('Vérifier Produit Trouvé').first().json;\n    prenom = backupData.user_info.prenom || '';\n    nom    = backupData.user_info.nom    || '';\n    email  = backupData.user_info.email  || '';\n  } catch(e2) {}\n}\n\nconst xmlData = data.data || '';\nconst orderIdMatch = xmlData.match(/<id><!\\[CDATA\\[(\\d+)\\]\\]><\\/id>/);\nconst orderId = orderIdMatch ? orderIdMatch[1] : null;\n\nreturn [{\n  json: {\n    session_id:   session_id,\n    order_id:     orderId,\n    product_name: orderData.product_name,\n    quantity:     orderData.quantity,\n    total:        orderData.total,\n    email:        email  || null,\n    customer:     `${prenom} ${nom}`.trim() || 'Client'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5616,
+        512
+      ],
+      "id": "13ac951a-c5e6-4a23-a60a-928347990a5d",
+      "name": "extrait les montants réels"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=🎉 Commande #{{ $('extrait les montants réels').item.json.order_id }} validée !\n\n🛍️ {{ $('extrait les montants réels').item.json.product_name }} x{{ $('extrait les montants réels').item.json.quantity }}\n💰 Total : {{ $('extrait les montants réels').item.json.total }} €\n📧 Confirmation envoyée à {{ $('extrait les montants réels').item.json.email }}\n\nMerci {{ $('extrait les montants réels').item.json.customer }} pour votre achat chez PassionCampagne ! 😊",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        6032,
+        512
+      ],
+      "id": "90c9d001-a8aa-49f4-abab-c02ab9a1d420",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "url": "=https://helpful-hog-77527.upstash.io/del/session_{{ $node[\"Webhook\"].json.body.session_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer gQAAAAAAAS7XAAIncDJjNDg1NGRiOWFhMzM0NTk0Yjk5ZTkzYTZiMWY3Mzc0OXAyNzc1Mjc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5840,
+        512
+      ],
+      "id": "0b35537e-e7ba-4fae-948d-2dd75e2272e9",
+      "name": "Reset Session Redis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\n\nlet body = {};\ntry {\n  body = $('Webhook1').first().json.body;\n} catch(e) {\n  try {\n    body = $('Webhook').first().json.body;\n  } catch(e2) {\n    body = {};\n  }\n}\n\nlet redisData = null;\ntry {\n  if (raw?.result) {\n    redisData = typeof raw.result === 'string' ? JSON.parse(raw.result) : raw.result;\n  }\n} catch(e) { redisData = null; }\n\nconst session_id      = body.session_id || 'default_session';\nconst current_message = body.commande   || body.message || '';\nconst selection       = body.selection  || null;\n\n// ✅ FIX CRITIQUE : Détecter une nouvelle commande\n// Si le message commence par \"COMMANDE :\" ou si une sélection arrive\n// ET que l'ancienne session est confirmée → on reset Redis\nconst isNewOrder = \n  current_message.toUpperCase().startsWith('COMMANDE :') ||\n  (selection !== null && selection !== undefined);\n\nif (isNewOrder && redisData?.confirmed === true) {\n  // ✅ Reset forcé : nouvelle commande = nouvelle session\n  redisData = null;\n}\n\nconst default_user_info = {\n  prenom: null, nom: null, email: null, password: null,\n  adresse: null, code_postal: null, ville: null, telephone: null,\n  mode_livraison: null, mode_paiement: null\n};\n\nconst user_info = { ...default_user_info, ...(redisData?.user_info || {}) };\nconst ui        = user_info;\n\nconst product  = selection?.name || redisData?.product  || null;\nconst quantity = selection?.qty  || redisData?.quantity || null;\n\nconst isComplete = !!(\n  product && quantity &&\n  ui.prenom && ui.nom && ui.email && ui.password &&\n  ui.adresse && ui.ville && ui.code_postal\n);\n\nconst confirmedInRedis = redisData?.confirmed            === true;\nconst waitingInRedis   = redisData?.waiting_confirmation === true;\nconst waiting_confirmation = waitingInRedis || (isComplete && !confirmedInRedis);\n\nreturn {\n  session_id,\n  current_message,\n  product,\n  quantity,\n  product_id:            selection?.id    || redisData?.product_id    || null,\n  product_price:         selection?.price || redisData?.product_price || null,\n  intent:                redisData?.intent      || 'commande',\n  last_intent:           redisData?.last_intent || null,\n  customer_id:           redisData?.customer_id || null,\n  address_id:            redisData?.address_id  || null,\n  user_info,\n  confirmed:             confirmedInRedis,\n  waiting_confirmation,\n  session_source:        redisData ? 'redis' : 'new',\n  id_carrier:            redisData?.id_carrier    || null,\n  carrier_name:          redisData?.carrier_name  || null,\n  payment_module:        redisData?.payment_module || null,\n  payment_label:         redisData?.payment_label  || null,\n  // ✅ FIX boucle infinie : next_field restauré depuis Redis\n  next_field:            isNewOrder ? null : (redisData?.next_field || null),\n  // ✅ FIX : Indicateur nouvelle commande pour Code in JavaScript\n  is_new_order:          isNewOrder\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        496
+      ],
+      "id": "9006173d-8ad6-43d5-bc42-41a40cabab26",
+      "name": "Init Session"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "73fa766f-fc32-4dae-b6f5-edaa82c96c88",
+              "leftValue": "={{ $json.error.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -272,
+        480
+      ],
+      "id": "89bece8c-25a3-4e95-ad19-529d455e8004",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n\"reply\": \"Service temporairement indisponible, reessayez.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        304
+      ],
+      "id": "d62d48ac-21fc-495b-913f-526f0c8c1b27",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "url": "=https://passioncampagne9.projets-omega.net/api/orders/{{ $json.order_tracking.numero_commande }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Basic OURaSUNBNVM2NlROS0RFMVhMRkozTEdZVTRQOEJLWDE6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        16
+      ],
+      "id": "340babe5-338a-4a6f-bba5-0248ebdba061",
+      "name": "GET Commande",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "898d56fb-30b2-4797-b1a5-883fe9ada86a",
+              "leftValue": "={{ $json.order_tracking.numero_commande }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1588ff8e-8c15-4ad5-b123-57d5c9ddb7df",
+              "leftValue": "={{ $json.order_tracking.email_verification }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1280,
+        144
+      ],
+      "id": "732d2e8d-9549-421e-9f92-3de5b93206df",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{ $json.reply }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1600,
+        208
+      ],
+      "id": "d444b1ff-3392-4d50-af58-709408966c1a",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        32,
+        768
+      ],
+      "id": "f0a8e471-2e3f-41b1-9591-f50fef7482c3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2vzOFNtxy0cB5h7v",
+          "name": "Google Gemini(PaLM) Api account 15"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Utilise cet outil pour consulter la liste des produits. Tu recevras l'id, le name, le price et l'id_default_image.\n\nINSTRUCTION IMAGE : Pour chaque produit, tu dois générer dynamiquement l'URL de la photo en utilisant cette structure exacte :\nhttps://9DZICA5S66TNKDE1XLFJ3LGYU4P8BKX1@www.passioncampagne9.projets-omega.net/api/images/products/{id}/{id_default_image}\n\nRemplace {id} par l'ID du produit et {id_default_image} par l'ID de l'image reçu. Présente toujours la photo au client quand tu proposes un produit en utilisant le format Markdown : ![Nom du produit](URL_DE_L_IMAGE).\n\nEt si le Client demande juste l'image ou photos du produit, affiche aussi le prix en bas de la photos",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/products?display=[id,name,price,id_default_image,quantity]&filter[active]=1&io_format=JSON",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        352,
+        768
+      ],
+      "id": "78528de7-d4a5-4e47-baa5-1f4b1a3128c1",
+      "name": "get produits",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Récupère la liste des transporteurs actifs disponibles \n             sur PrestaShop pour proposer au client",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/carriers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "JSON"
+            },
+            {
+              "name": "display",
+              "value": "[id,name,active,deleted]"
+            },
+            {
+              "name": "filter[active]",
+              "value": "1"
+            },
+            {
+              "name": "filter[deleted]",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        784
+      ],
+      "id": "d96d8fbe-47cf-4be7-8f0a-be0ccffbe3f7",
+      "name": "get_carriers",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Utilise cet outil pour récupérer EN TEMPS RÉEL les modules \nde paiement actifs sur PrestaShop. \nPrésente UNIQUEMENT les résultats retournés par l'API.\nNe jamais inventer ou ajouter des options non retournées.\nFormate en liste numérotée pour le client.",
+        "url": "https://www.passioncampagne9.projets-omega.net/api/configurations?filter[name]=PS_SHOP_NAME&display=[value]&output_format=JSON",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        528,
+        784
+      ],
+      "id": "30954e03-93d0-4ce5-bf9e-c4bce851ce69",
+      "name": "GET mode de paiement1",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "OWa4yqMUdj5qg8gu",
+          "name": "Wordpress_n8n"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Lire Session Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Fusion Session4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier Complétude": {
+      "main": [
+        [
+          {
+            "node": "Search Product2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier Produit Trouvé": {
+      "main": [
+        [
+          {
+            "node": "récupère l’ID client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Générer Données Client Auto": {
+      "main": [
+        [
+          {
+            "node": "Create Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CHECK ADDRESS": {
+      "main": [
+        [
+          {
+            "node": "vérifie si has_address = false",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "récupère l’ID client": {
+      "main": [
+        [
+          {
+            "node": "Décider Customer Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Need Create Customer?": {
+      "main": [
+        [
+          {
+            "node": "Générer Données Client Auto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CHECK ADDRESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "vérifie si has_address = false": {
+      "main": [
+        [
+          {
+            "node": "adresse existe ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "adresse existe ?": {
+      "main": [
+        [
+          {
+            "node": "CREATION PANIER1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "créer une adresse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décider Customer Action": {
+      "main": [
+        [
+          {
+            "node": "Need Create Customer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Customer": {
+      "main": [
+        [
+          {
+            "node": "Extract Customer ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Address": {
+      "main": [
+        [
+          {
+            "node": "Extract Address ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Address ID": {
+      "main": [
+        [
+          {
+            "node": "CREATION PANIER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Customer ID": {
+      "main": [
+        [
+          {
+            "node": "Générer Adresse Auto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Générer Adresse Auto": {
+      "main": [
+        [
+          {
+            "node": "Create Address",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Cart ID": {
+      "main": [
+        [
+          {
+            "node": "XML MAJ Panier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML MAJ Panier": {
+      "main": [
+        [
+          {
+            "node": "PUT Panier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PUT Panier": {
+      "main": [
+        [
+          {
+            "node": "creer commande1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREATION PANIER": {
+      "main": [
+        [
+          {
+            "node": "Extract Cart ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Vérifier Complétude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire Session Redis": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vérifier Produit Trouvé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Product2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "creer commande1": {
+      "main": [
+        [
+          {
+            "node": "extrait les montants réels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fusion Session4": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook12",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sauvegarder Session5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass XML Data": {
+      "main": [
+        [
+          {
+            "node": "creer commande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "creer commande": {
+      "main": [
+        [
+          {
+            "node": "extrait les montants réels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Cart ID1": {
+      "main": [
+        [
+          {
+            "node": "XML MAJ Panier1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML MAJ Panier1": {
+      "main": [
+        [
+          {
+            "node": "PUT Panier1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PUT Panier1": {
+      "main": [
+        [
+          {
+            "node": "Pass XML Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREATION PANIER1": {
+      "main": [
+        [
+          {
+            "node": "Extract Cart ID1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extrait les montants réels": {
+      "main": [
+        [
+          {
+            "node": "Reset Session Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Session Redis": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Session": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Init Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "GET Commande",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get produits": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_carriers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET mode de paiement1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2db2092c-fe79-4368-ab7e-d0b92252da26",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "84f22c6ccf4315047b59f6ffab52cda01e67c2ebad27e955d523253f41cfcc29"
+  },
+  "id": "4tej8ciYR6D5haj0",
+  "tags": [
+    {
+      "updatedAt": "2026-03-12T19:05:45.679Z",
+      "createdAt": "2026-03-12T19:05:45.679Z",
+      "id": "ADyiL1DuSVZKGI4U",
+      "name": "ecommerce"
+    },
+    {
+      "updatedAt": "2026-03-12T19:05:45.688Z",
+      "createdAt": "2026-03-12T19:05:45.688Z",
+      "id": "KThE4Ez5nUhnQRx6",
+      "name": "prestashop"
+    },
+    {
+      "updatedAt": "2026-03-12T19:05:45.662Z",
+      "createdAt": "2026-03-12T19:05:45.662Z",
+      "id": "n41Opy9iHWkxZ2pi",
+      "name": "chatbot"
+    }
+  ]
+}
