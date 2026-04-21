@@ -1,0 +1,83 @@
+2026-03-24 09:59:13,014 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.2.0.2:5000
+2026-03-24 09:59:13,015 [INFO] [33mPress CTRL+C to quit[0m
+2026-03-24 09:59:13,019 [INFO]  * Restarting with stat
+2026-03-24 09:59:14,070 [WARNING]  * Debugger is active!
+2026-03-24 09:59:14,077 [INFO]  * Debugger PIN: 384-106-708
+2026-03-24 10:08:56,180 [INFO]  * Detected change in 'C:\\Users\\Patricialalasoa\\Desktop\\ZERO-CLIQUE\\backend\\app.py', reloading
+2026-03-24 10:08:56,573 [INFO]  * Restarting with stat
+2026-03-24 10:08:57,833 [WARNING]  * Debugger is active!
+2026-03-24 10:08:57,844 [INFO]  * Debugger PIN: 384-106-708
+2026-03-24 10:44:02,992 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.2.0.2:5000
+2026-03-24 10:44:02,992 [INFO] [33mPress CTRL+C to quit[0m
+2026-03-24 10:44:02,996 [INFO]  * Restarting with stat
+2026-03-24 10:44:04,023 [WARNING]  * Debugger is active!
+2026-03-24 10:44:04,030 [INFO]  * Debugger PIN: 384-106-708
+2026-03-24 10:44:24,404 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:44:24,416 [INFO] 127.0.0.1 - - [24/Mar/2026 10:44:24] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:46:29,175 [INFO] 127.0.0.1 - - [24/Mar/2026 10:46:29] "OPTIONS /api/order HTTP/1.1" 200 -
+2026-03-24 10:46:29,446 [INFO] {"timestamp": "2026-03-24T07:46:29.446089", "status": "RECEIVED", "payload": {"produit_id": 1, "produit": "T-shirt imprimé colibri", "couleur": "Orange", "taille": "S", "quantite": 3, "prix_total": "71.70"}, "response": null}
+2026-03-24 10:46:33,791 [INFO] {"timestamp": "2026-03-24T07:46:33.791881", "status": "N8N_UNREACHABLE", "payload": {"produit_id": 1, "produit": "T-shirt imprimé colibri", "couleur": "Orange", "taille": "S", "quantite": 3, "prix_total": "71.70"}, "response": null}
+2026-03-24 10:46:33,793 [INFO] 127.0.0.1 - - [24/Mar/2026 10:46:33] "[35m[1mPOST /api/order HTTP/1.1[0m" 503 -
+2026-03-24 10:52:11,388 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:52:11,390 [INFO] 127.0.0.1 - - [24/Mar/2026 10:52:11] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:52:15,476 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:52:15,478 [INFO] 127.0.0.1 - - [24/Mar/2026 10:52:15] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:56:13,610 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:56:13,611 [INFO] 127.0.0.1 - - [24/Mar/2026 10:56:13] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:56:15,071 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:56:15,074 [INFO] 127.0.0.1 - - [24/Mar/2026 10:56:15] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:56:16,103 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:56:16,105 [INFO] 127.0.0.1 - - [24/Mar/2026 10:56:16] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 10:56:16,767 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 10:56:16,768 [INFO] 127.0.0.1 - - [24/Mar/2026 10:56:16] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:03:15,471 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:03:15,476 [INFO] 127.0.0.1 - - [24/Mar/2026 11:03:15] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:05:10,616 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:05:10,619 [INFO] 127.0.0.1 - - [24/Mar/2026 11:05:10] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:05:15,176 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:05:15,180 [INFO] 127.0.0.1 - - [24/Mar/2026 11:05:15] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:11:51,816 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:11:51,819 [INFO] 127.0.0.1 - - [24/Mar/2026 11:11:51] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:11:53,263 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:11:53,265 [INFO] 127.0.0.1 - - [24/Mar/2026 11:11:53] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:44,899 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:44,902 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:44] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:47,001 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:47,003 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:47] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:47,835 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:47,837 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:47] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:48,724 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:48,726 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:48] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:48,856 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:48,858 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:48] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:48,866 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:48,868 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:48] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:13:48,881 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:13:48,882 [INFO] 127.0.0.1 - - [24/Mar/2026 11:13:48] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:14:06,738 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:14:06,740 [INFO] 127.0.0.1 - - [24/Mar/2026 11:14:06] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:17:36,389 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:17:36,391 [INFO] 127.0.0.1 - - [24/Mar/2026 11:17:36] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:18:50,126 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:18:50,128 [INFO] 127.0.0.1 - - [24/Mar/2026 11:18:50] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:21:35,842 [INFO] [PrestaShop] 19 produits chargés
+2026-03-24 11:21:35,844 [INFO] 127.0.0.1 - - [24/Mar/2026 11:21:35] "GET /api/products HTTP/1.1" 200 -
+2026-03-24 11:23:20,231 [INFO] 127.0.0.1 - - [24/Mar/2026 11:23:20] "[33mOPTIONS /api/chat HTTP/1.1[0m" 404 -
+2026-03-24 11:31:03,254 [INFO]  * Detected change in 'C:\\Users\\Patricialalasoa\\Desktop\\ZERO-CLIQUE\\backend\\app.py', reloading
+2026-03-24 11:31:03,292 [INFO]  * Detected change in 'C:\\Users\\Patricialalasoa\\Desktop\\ZERO-CLIQUE\\backend\\app.py', reloading
+2026-03-24 11:31:03,907 [INFO]  * Restarting with stat
+2026-03-24 11:31:03,894 [INFO]  * Restarting with stat
+2026-03-24 11:31:06,801 [INFO]  * Restarting with stat
+2026-03-24 11:31:06,804 [INFO]  * Restarting with stat
+2026-03-24 11:44:50,759 [INFO]  * Restarting with stat
+2026-03-24 11:44:51,317 [INFO]  * Restarting with stat
+2026-03-24 11:44:55,711 [INFO]  * Restarting with stat
+2026-03-24 11:44:56,133 [INFO]  * Restarting with stat
+2026-03-24 11:52:47,280 [INFO]  * Restarting with stat
+2026-03-24 11:52:47,866 [INFO]  * Restarting with stat

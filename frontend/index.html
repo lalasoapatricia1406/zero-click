@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZERO-CLICK — PassionCampagne</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <div class="logo">PASSION<span style="color:var(--accent)">CAMPAGNE</span> <span>// ZERO-CLICK</span></div>
+    <div class="header-tag">COMMANDE RAPIDE — DESKTOP</div>
+</header>
+
+<div class="main">
+    <div class="products-panel">
+        <div class="panel-toolbar">
+            <button class="dropdown-toggle" id="dropdownToggle" onclick="toggleProducts()">
+                <span class="dropdown-arrow">▼</span>
+                AFFICHER LES PRODUITS
+            </button>
+            <span class="product-count" id="productCount">SYNCHRONISATION...</span>
+            <div class="stock-legend">
+                <div class="legend-item"><div class="dot green"></div> Disponible</div>
+                <div class="legend-item"><div class="dot orange"></div> Reste peu</div>
+                <div class="legend-item"><div class="dot red"></div> Rupture</div>
+            </div>
+        </div>
+
+        <div class="products-list" id="productsList"></div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="big">CATALOGUE</div>
+            <p>Cliquez sur « Afficher les produits » pour charger les articles de PrestaShop</p>
+        </div>
+    </div> <div class="chat-panel">
+        <div class="chat-header">
+            <span class="chat-title">// COMMANDE BOT</span>
+            <div class="chat-status"><div class="status-dot"></div><span>PRÊT</span></div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="msg system">
+                Bienvenue sur Zero-Click.<br>
+                Sélectionnez un produit à gauche, puis cliquez sur <strong style="color:var(--accent)">CHOISIR</strong> pour préparer votre commande automatique.
+                <div class="msg-time" id="welcomeTime"></div>
+            </div>
+        </div>
+
+       <div class="chat-input-area">
+    <div id="selectionPreview" class="selection-preview"></div>
+
+    <div class="chat-controls">
+        <textarea 
+            id="chatInput" 
+            class="chat-textarea" 
+            placeholder="Tapez votre commande ou votre question ici..."
+        ></textarea>
+        
+        <div class="chat-actions">
+            <button id="btnSend" class="btn-send" onclick="sendChatMessage()" disabled>
+                <i class="fas fa-paper-plane"></i> ENVOYER
+            </button>
+            <button class="btn-clear" onclick="clearCurrentChat()">
+                EFFACER
+            </button>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
